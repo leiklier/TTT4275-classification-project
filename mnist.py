@@ -126,17 +126,31 @@ def plot_misclassified_images(images, labels_true, labels_predicted, num_images=
             img_plot = ax.imshow(image)
             img_plot.set_interpolation("nearest")
 
-def plot_correctly_classified_images(images, labels_true, labels_predicted):
-    idx_9 = np.where((labels_true == 9) & (labels_predicted == 9))[0]
-    idx_2 = np.where((labels_true == 2) & (labels_predicted == 2))[0]
-    idx = np.reshape(np.array([idx_9, idx_2]), len(idx_9) + len(idx_2))
+def plot_correctly_classified_images(images, labels_true, labels_predicted, num_images=12):
+     # Indices of some misclassified images
+    image_indices = np.where(labels_true == labels_predicted)[0]
+    image_indices = image_indices[:num_images]
 
-    fig = plt.figure(figsize=(5, 30))
-    for i in range(len(idx)):
-        ax = fig.add_subplot(len(idx), 1, i+1)
-        image = np.reshape(images[idx[i], :], (28,28))
-        img_plot = ax.imshow(image)
-        img_plot.set_interpolation("nearest")
+    # We want a square layout of the images
+    num_cols = np.uint16(np.floor(np.sqrt(num_images)))
+    num_rows = np.uint16(num_images / num_cols)
+
+    fig = plt.figure(figsize=(5, 5))
+    fig.suptitle("Some correctly classified images")
+
+    for row in range(num_rows):
+        for col in range(num_cols):
+            i = (row * num_cols) + col
+            image_index = image_indices[i]
+
+            ax = fig.add_subplot(num_rows, num_cols, i+1)
+            ax.axis("off")
+            ax.set_title(f'T:{labels_true[image_index]}; P:{labels_predicted[image_index]}')
+
+            image = np.reshape(images[image_index, :], (28,28))
+
+            img_plot = ax.imshow(image)
+            img_plot.set_interpolation("nearest")
 
 def plot_confusion_matrix(confusion_matrix, name):
     df_cm = pd.DataFrame(confusion_matrix, index = [i for i in "0123456789"],
@@ -170,8 +184,8 @@ def run_nearest_neighbour_classifier(train_data, train_labels, test_data, test_l
     confusion_matrix = metrics.confusion_matrix(test_labels, test_predicted)
     plot_confusion_matrix(confusion_matrix, name="CM for NN using whole dataset")
 
-    #plot_correctly_classified_images(train_data, test_labels, test_predicted)
-    plot_misclassified_images(train_data, test_labels, test_predicted)
+    plot_correctly_classified_images(test_data, test_labels, test_predicted)
+    plot_misclassified_images(test_data, test_labels, test_predicted)
 
 
 
