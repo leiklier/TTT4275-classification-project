@@ -5,7 +5,6 @@ import struct
 import seaborn as sn
 import pandas as pd
 from scipy.spatial import distance
-from sklearn import metrics
 from sklearn.neighbors import NearestNeighbors
 from sklearn.cluster import KMeans
 
@@ -14,6 +13,10 @@ def read_idx(filename):
         zero, data_type, dims = struct.unpack('>HBB', f.read(4))
         shape = tuple(struct.unpack('>I', f.read(4))[0] for d in range(dims))
         return np.fromstring(f.read(), dtype=np.uint8).reshape(shape)
+
+ ################################################
+#         Functions for loading data             #
+ ################################################
 
 # Load the first num_samples images from train dataset with  corresponding labels:
 def load_train_dataset(num_samples=10000):
@@ -53,6 +56,10 @@ def load_test_dataset(num_samples):
 
     return (test_data, test_labels)
 
+ ##############################################
+#          Functions for calculations          #
+ ##############################################
+
 def classify_img(nearest):
     nearest_number_counts = [0]*10
     highest = 0
@@ -80,7 +87,7 @@ def k_nearest_neighbours(data, data_labels, image, k_neighbours):
 def get_clusters(dataset, labels, classes, n_clusters=64):
     label_and_clusters = [] # [ (label, clusters=[]) ]
     for curr_class in classes:
-        indices = labels == curr_class
+        indices = np.where(labels == curr_class)[0]
         data_of_curr_class = dataset[indices]
 
         clusters = KMeans(n_clusters=n_clusters).fit(data_of_curr_class).cluster_centers_
@@ -89,16 +96,46 @@ def get_clusters(dataset, labels, classes, n_clusters=64):
 
     return label_and_clusters
 
-def get_cluster_dataset(dataset, labels):
-    label_and_clusters = get_clusters(dataset, labels, classes=range(10), n_clusters=64)
+def get_cluster_dataset(dataset, labels, n_clusters=64):
+    classes = range(10)
+    n_classes = len(classes)
+    label_and_clusters = get_clusters(dataset, labels, classes, n_clusters)
 
     train_data = []
-    train_labels = [ [i]*64 for i in range(10) ]
-    train_labels = np.array(train_labels).reshape(64*10)
+    train_labels = [ [curr_class]*n_clusters for curr_class in classes ]
+    train_labels = np.array(train_labels).reshape(n_clusters*n_classes)
     for (label, clusters) in label_and_clusters:
         train_data.extend(clusters)
 
     return (train_data, train_labels)
+
+def get_confusion_matrix(labels_predicted, labels_true, classes):
+    confusion_matrix = []
+
+    for predicted_class in classes:
+        row = []
+
+        for true_class in classes:
+            # All occurences of current true_class in labels_true:
+            true_indices = np.where(labels_true == np.uint8(true_class))[0]
+
+            # All occurences of current predicted_class in labels_predicted:
+            predicted_indices = np.where(labels_predicted == np.uint8(predicted_class))[0]
+
+            # We want to find the number of elements where these two matches:
+            num_occurences = len( np.intersect1d(true_indices, predicted_indices) )
+            row.append(num_occurences)
+
+        confusion_matrix.append(row)
+
+    return np.array(confusion_matrix)
+
+
+
+
+ ################################################
+#             Functions for plotting             #
+ ################################################
 
 def plot_misclassified_images(images, labels_true, labels_predicted, num_images=12):
     # Indices of some misclassified images
@@ -127,7 +164,7 @@ def plot_misclassified_images(images, labels_true, labels_predicted, num_images=
             img_plot.set_interpolation("nearest")
 
 def plot_correctly_classified_images(images, labels_true, labels_predicted, num_images=12):
-     # Indices of some misclassified images
+     # Indices of some correctly classified images
     image_indices = np.where(labels_true == labels_predicted)[0]
     image_indices = image_indices[:num_images]
 
@@ -161,9 +198,9 @@ def plot_confusion_matrix(confusion_matrix, name):
 
     sn.heatmap(df_cm, annot=True)
 
-######################
-# Runtime functions: #
-######################
+ ##########################################################
+#                    Runtime functions:                    #
+ ##########################################################
 
 def run_nearest_neighbour_classifier(train_data, train_labels, test_data, test_labels):
     num_errors = 0
@@ -181,14 +218,11 @@ def run_nearest_neighbour_classifier(train_data, train_labels, test_data, test_l
     error_rate = num_errors/len(test_data)*100
     print("Error rate for NN using whole dataset:", error_rate, "%")
 
-    confusion_matrix = metrics.confusion_matrix(test_labels, test_predicted)
+    confusion_matrix = get_confusion_matrix(test_labels, test_predicted, classes=range(10))
     plot_confusion_matrix(confusion_matrix, name="CM for NN using whole dataset")
 
     plot_correctly_classified_images(test_data, test_labels, test_predicted)
     plot_misclassified_images(test_data, test_labels, test_predicted)
-
-
-
 
 def run_k_nearest_neighbour_classifier(train_data, train_labels, test_data, test_labels):
     num_errors = 0
@@ -206,10 +240,8 @@ def run_k_nearest_neighbour_classifier(train_data, train_labels, test_data, test
     error_rate = num_errors/len(test_data)*100
     print("Error rate for KNN with k =",NUM_NEIGHBOURS, "using whole dataset:", error_rate,"%")
 
-    confusion_matrix = metrics.confusion_matrix(test_labels, test_predicted)
+    confusion_matrix = get_confusion_matrix(test_labels, test_predicted, classes=range(10))
     plot_confusion_matrix(confusion_matrix, name="CM FOR KNN using whole dataset")
-
-
 
 def run_cluster_classifier(train_data, train_labels, test_data, test_labels):
     errors = 0
@@ -227,12 +259,12 @@ def run_cluster_classifier(train_data, train_labels, test_data, test_labels):
     error_rate = errors/len(test_data)*100
     print("Error rate for NN using cluster:", error_rate, "%")
 
-    confusion_matrix = metrics.confusion_matrix(test_labels, test_predicted)
+    confusion_matrix = get_confusion_matrix(test_labels, test_predicted, classes=range(10))
     plot_confusion_matrix(confusion_matrix, name="CM for NN using cluster")
 
 def main():
 
-    TRAIN_SIZE = 1000
+    TRAIN_SIZE = 5000
     TEST_SIZE = 100
 
     train_data, train_labels = load_train_dataset(num_samples=TRAIN_SIZE)
