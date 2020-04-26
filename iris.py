@@ -1,4 +1,7 @@
 import numpy as np
+import struct
+import seaborn as sn
+import pandas as pd
 import matplotlib.pyplot as plt
 
 def load_dataset():
@@ -105,10 +108,10 @@ def get_confusion_matrix(predicted_labels, labels):
 
         for true_class in classes:
             # All occurences of current true_class in labels_true:
-            true_indices = np.where(labels == np.uint8(true_class))[0]
+            true_indices = np.where(labels == true_class)[0]
 
             # All occurences of current predicted_class in labels_predicted:
-            predicted_indices = np.where(predicted_labels == np.uint8(predicted_class))[0]
+            predicted_indices = np.where(predicted_labels == predicted_class)[0]
 
             # We want to find the number of elements where these two matches:
             num_occurences = len( np.intersect1d(true_indices, predicted_indices) )
@@ -162,6 +165,14 @@ def plot_histograms(samples, labels, features, step_length=0.1):
 
     plt.show()
 
+def plot_confusion_matrix(confusion_matrix, classes, name="Confusion matrix"):
+    df_cm = pd.DataFrame(confusion_matrix, index=classes, columns=classes)
+    fig = plt.figure(figsize = (10,7))
+
+    fig.suptitle(name, fontsize=16)
+
+    sn.heatmap(df_cm, annot=True)
+
 
 def main():
     all_samples, all_labels = load_dataset()
@@ -189,17 +200,12 @@ def main():
     W = train_linear_classifier(train_samples, train_label_vectors, features, num_iterations=1000)
 
     predicted_test_label_vectors = get_predicted_labels(test_samples, W)
-
-    print("Predicted:", predicted_test_label_vectors[5])
-    print("Actual:", test_label_vectors[5])
-    print(np.argmax(predicted_test_label_vectors[5]))
-
     predicted_test_label_strings = np.array([ label_vector_to_string(label, classes) for label in predicted_test_label_vectors])
 
     error_rate = get_error_rate(predicted_test_label_strings, test_labels)
-
     print("Error rate:", error_rate)
-    print("Predicted:", predicted_test_label_strings[20:30])
-    print("Actual:", test_labels[20:30])
+    confusion_matrix = get_confusion_matrix(predicted_test_label_strings, test_labels)
+    plot_confusion_matrix(confusion_matrix, classes)
+    plt.show()
 
 main()

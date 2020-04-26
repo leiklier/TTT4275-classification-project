@@ -5,7 +5,6 @@ import struct
 import seaborn as sn
 import pandas as pd
 from scipy.spatial import distance
-from sklearn.neighbors import NearestNeighbors
 from sklearn.cluster import KMeans
 
 def read_idx(filename):
