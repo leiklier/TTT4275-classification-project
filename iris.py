@@ -26,8 +26,8 @@ def load_dataset():
     return samples, labels
 
 def split_dataset(samples, labels, split_index):
-    first_set = samples[:split_index], labels[:split_index]
-    last_set = samples[split_index:], labels[split_index:]
+    first_set = samples[ :split_index], labels[ :split_index]
+    last_set = samples[split_index: ], labels[split_index: ]
 
     return first_set, last_set
 
@@ -59,7 +59,7 @@ def get_predicted_labels(samples, W):
 # samples = x
 # previous_W = W(m - 1)
 # ASSUMES: len(predicted_labels) = len(labels) = len(samples)
-def iterate_weight_matrix(predicted_labels, labels, samples, previous_W, alpha=0.01):
+def get_next_weight_matrix(predicted_labels, labels, samples, previous_W, alpha=0.01):
     num_features = len(samples[0]) - 1 # Subtract 1 because of the 1-fill
     num_classes = 3
     grad_g_MSE = predicted_labels - labels # dim (30,3)
@@ -79,13 +79,11 @@ def train_linear_classifier(samples, labels, features, num_iterations=100, alpha
     num_features = len(features)
 
     # Initialize weight matrix
-    print("Num classes:", num_classes)
-    print("Num features:", num_features)
     W = np.zeros((num_classes, num_features+1))
 
     for curr_iteration in range(num_iterations):
         predicted_labels = get_predicted_labels(samples, W)
-        W = iterate_weight_matrix(predicted_labels, labels, samples, W, alpha)
+        W = get_next_weight_matrix(predicted_labels, labels, samples, W, alpha)
 
     return W
 
@@ -182,7 +180,7 @@ def main():
                 1: 'sepal width',
                 2: 'petal length',
                 3: 'petal width'}
-    # plot_histograms(all_samples, all_labels, features)
+    plot_histograms(all_samples, all_labels, features)
 
     train_dataset, test_dataset = split_dataset(all_samples, all_labels, 30)
     train_samples, train_labels = train_dataset

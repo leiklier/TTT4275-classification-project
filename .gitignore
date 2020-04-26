@@ -1,3 +1,12 @@
 .venv
 .vscode
+
 mnist_datasets/*
+
+*.aux
+*.log
+*.pdf
+*.fls
+*_latexmk
+*.synctex.gz
+*.out
