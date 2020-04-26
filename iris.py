@@ -88,7 +88,11 @@ def train_linear_classifier(samples, labels, features, num_iterations=100, alpha
 
 def get_error_rate(predicted_labels, labels):
     num_samples = len(labels)
-    num_errors = len(np.where(predicted_labels != labels)[0])
+
+    num_errors = 0
+    for i in range(len(labels)):
+        if labels[i] != predicted_labels[i]:
+            num_errors += 1
 
     return num_errors / num_samples
 
@@ -182,7 +186,7 @@ def main():
     train_label_vectors = np.array([ label_string_to_vector(label, classes) for label in train_labels])
     test_label_vectors = np.array([ label_string_to_vector(label, classes) for label in test_labels])
 
-    W = train_linear_classifier(train_samples, train_label_vectors, features)
+    W = train_linear_classifier(train_samples, train_label_vectors, features, num_iterations=1000)
 
     predicted_test_label_vectors = get_predicted_labels(test_samples, W)
 
@@ -192,11 +196,10 @@ def main():
 
     predicted_test_label_strings = np.array([ label_vector_to_string(label, classes) for label in predicted_test_label_vectors])
 
-    # TODO: ERROR RATE NOT WORKING
-    error_rate = get_error_rate(predicted_test_label_vectors, test_label_vectors)
+    error_rate = get_error_rate(predicted_test_label_strings, test_labels)
 
     print("Error rate:", error_rate)
-    print("Predicted:", predicted_test_label_strings[:10])
-    print("Actual:", test_labels[:10])
+    print("Predicted:", predicted_test_label_strings[20:30])
+    print("Actual:", test_labels[20:30])
 
 main()
