@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def load_dataset():
-    sample_label_pairs = [] # [ (data, label) ]
+    sample_label_pairs = [] # [ (sample, label) ]
 
     with open(f'./iris_dataset.csv', 'rb') as csv_file:
         for row in csv_file:
@@ -30,7 +30,6 @@ def split_dataset(samples, labels, split_index):
         indices = np.where(labels == curr_class)[0]
         indices_by_class.append(indices)
     indices_by_class = np.array(indices_by_class)
-
 
     first_set_indices_by_class = indices_by_class[ :, :split_index ]
     last_set_indices_by_class = indices_by_class[ :, split_index:]
@@ -58,7 +57,7 @@ def MSE(predictions, targets):
 
 # Implements eq. (3.20) using
 # samples = x
-def get_predicted_labels(samples, W):
+def get_predicted_label_vectors(samples, W):
     exponentials = np.array([ np.exp(-(np.matmul(W, sample))) for sample in samples ])
     denominators = exponentials + 1
     predictions = 1 / denominators
@@ -85,26 +84,47 @@ def get_next_weight_matrix(predicted_labels, labels, samples, previous_W, alpha=
 
     return next_W
 
-def train_linear_classifier(samples, labels, features, num_iterations=100, alpha=0.01):
-    classes = np.unique(labels)
+# This function uses train_samples and train_labels to train a  linear classifier
+# For each iteration, it outputs its error rate by comparing against
+# the test set (test_samples, test_labels)
+# It outputs the weighing matrix W and the rate of errors per iteration
+def train_linear_classifier(train_samples, train_label_vectors, test_samples, test_label_vectors, features, num_iterations=100, alpha=0.01):
+    classes = np.unique(train_label_vectors)
     num_classes = 3
     num_features = len(features)
+
+    error_rate_per_iteration = []
 
     # Initialize weight matrix
     W = np.zeros((num_classes, num_features+1))
 
     for curr_iteration in range(num_iterations):
-        predicted_labels = get_predicted_labels(samples, W)
-        W = get_next_weight_matrix(predicted_labels, labels, samples, W, alpha)
+        # Training
+        predicted_train_label_vectors = get_predicted_label_vectors(train_samples, W)
+        W = get_next_weight_matrix(predicted_train_label_vectors, train_label_vectors, train_samples, W, alpha)
 
-    return W
+        # Testing
+        predicted_test_label_vectors = get_predicted_label_vectors(test_samples, W)
+        predicted_test_label_vectors = np.array([ get_rounded_label_vector(label_vector) for label_vector in predicted_test_label_vectors ])
 
-def get_error_rate(predicted_labels, labels):
-    num_samples = len(labels)
+        error_rate = get_error_rate(predicted_test_label_vectors, test_label_vectors)
+        error_rate_per_iteration.append(error_rate)
+
+    return W, error_rate_per_iteration
+
+def get_rounded_label_vector(label_vector):
+    index = np.argmax(label_vector)
+    rounded_vector_label = np.array([ i == index for i in range(len(label_vector)) ], dtype=np.uint8)
+
+    return rounded_vector_label
+
+def get_error_rate(predicted_label_vectors, true_label_vectors):
+    num_samples = len(true_label_vectors)
+    classes = np.unique(true_label_vectors)
 
     num_errors = 0
-    for i in range(len(labels)):
-        if labels[i] != predicted_labels[i]:
+    for i in range(len(true_label_vectors)):
+        if not np.array_equal(true_label_vectors[i], predicted_label_vectors[i]):
             num_errors += 1
 
     return num_errors / num_samples
@@ -183,6 +203,16 @@ def plot_confusion_matrix(confusion_matrix, classes, name="Confusion matrix"):
 
     sn.heatmap(df_cm, annot=True)
 
+    plt.show()
+
+def plot_error_rate(error_rate_per_iteration, start_index=0):
+    iteration_numbers = range(start_index, len(error_rate_per_iteration))
+    error_rate_per_iteration = error_rate_per_iteration[start_index: ]
+
+    plt.plot(iteration_numbers, error_rate_per_iteration)
+
+    plt.show()
+
 
 def main():
     all_samples, all_labels = load_dataset()
@@ -198,9 +228,6 @@ def main():
     train_samples, train_labels = train_dataset
     test_samples, test_labels = test_dataset
 
-
-    print(train_labels)
-
     # We need to add an awkward 1 to x_k as described on page 15:
     train_samples = np.array([ np.append(sample, [1]) for sample in train_samples ])
     test_samples = np.array([ np.append(sample, [1]) for sample in test_samples ])
@@ -210,15 +237,22 @@ def main():
     train_label_vectors = np.array([ label_string_to_vector(label, classes) for label in train_labels])
     test_label_vectors = np.array([ label_string_to_vector(label, classes) for label in test_labels])
 
-    W = train_linear_classifier(train_samples, train_label_vectors, features, num_iterations=1000)
+    W, error_rate_per_iteration = train_linear_classifier( \
+        train_samples, train_label_vectors, \
+        test_samples, test_label_vectors, \
+        features, num_iterations=1000, alpha=0.003 \
+    )
 
-    predicted_test_label_vectors = get_predicted_labels(test_samples, W)
-    predicted_test_label_strings = np.array([ label_vector_to_string(label, classes) for label in predicted_test_label_vectors])
+    plot_error_rate(error_rate_per_iteration)
 
-    error_rate = get_error_rate(predicted_test_label_strings, test_labels)
+    predicted_test_label_vectors = get_predicted_label_vectors(test_samples, W)
+    predicted_test_label_vectors = np.array([ get_rounded_label_vector(label_vector) for label_vector in predicted_test_label_vectors ])
+
+    predicted_test_label_strings = np.array([ label_vector_to_string(label, classes) for label in predicted_test_label_vectors ])
+
+    error_rate = get_error_rate(predicted_test_label_vectors, test_label_vectors)
     print("Error rate:", error_rate)
     confusion_matrix = get_confusion_matrix(predicted_test_label_strings, test_labels)
     plot_confusion_matrix(confusion_matrix, classes)
-    plt.show()
 
 main()
