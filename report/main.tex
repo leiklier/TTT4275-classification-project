@@ -6,6 +6,9 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage[english]{babel}
+\usepackage{listings}
+\lstset{language=Python,keywordstyle={\bfseries \color{blue}}}
+\usepackage{xparse}
 \usepackage[pdfborderstyle={/S/U/W 0}, colorlinks=true,allcolors=blue]{hyperref}
 \urlstyle{same}
 
@@ -17,7 +20,7 @@
 
 \maketitle
 
-\section{Introduction}
+\section{Introduction}\label{sec:introduction}
 The project described in this report has the goal of classifying samples of Iris flowers into
 three different classes, namely the Setosa, Versicolor, and the Virginica. Classifying plants
 based on their dimensions has multiple usages. For instance, it may be used by botanics as a tool
@@ -27,7 +30,7 @@ which may be hard for even the trained eye to spot, it could potentially outperf
 avoid disastrous misclassifications.
 
 The Iris flowers have large (Sepal) and small (Petal) leaves, and the length and width of these
-varies according to the class of flower. Thus, it seems natural to use these dimensions as features
+vary according to the class of flower. Thus, it seems natural to use those dimensions as features
 for the classification. A dataset consisting of such measurements has been used in this project. 50
 samples from each class has been provided. Their distributions are summarized in \autoref{fig:histograms}.
 
@@ -43,7 +46,7 @@ there is little overlap in the measurements from each of the classes for these f
 the sepal lengths and widths have quite large overlaps. Since two of the features are almost
 linearly separable, a linear classifier will be used in this project.
 
-\section{Theory}
+\section{Theory}\label{sec:theory}
 
 A linear classifier takes advantage of the fact that some classes may be separated by using a
 linear operation on the dataset. Consider the scatter plot in \autoref{fig:petal_scatter_plot}.
@@ -63,8 +66,8 @@ such an error rate would be considered acceptable.
     \label{fig:petal_scatter_plot}
 \end{figure}
 
-In the case of the Iris dataset, there are four features to be considered. While a line in 2D
-translates to a plane in 3D, it would become a hyperplane in datasets with a feature dimension
+In the case of the Iris dataset, there are four features to be considered. While a line of separation
+in 2D translates to a plane in 3D, it would become a hyperplane in datasets with a feature dimension
 $N > 3$.
 
 Consider a dataset with $C > 2$ number of classes, and $D$ number of features. Since the goal of
@@ -74,7 +77,7 @@ with the value "Virginica" in a mathematical equation). Initially, one would thi
 representing classes by distinct integers would be a good idea. However, this would imply
 that the euclidian distance between two classes would be inherently greater than the distance
 between two other classes. Intuitively, we know that this cannot be correct. To solve this problem,
-we introduce a $\mathbb{R}^C$-space where each of the classes $c_i$ is represented by a vector $\vec{v_k}$ where
+we introduce a $\mathbb{R}^C$-space where each of the classes $c_i$ are represented by a vector $\vec{v_k}$ where
 
 \begin{equation}
     v_{k,i} = \begin{cases}
@@ -89,9 +92,9 @@ $\vec{v_2} = [ 0\enspace 1\enspace  0 ]^T$
 Furthermore, we introduce the sample matrix $x$, which holds the measurements of the features from
 all of the labeled samples. Let $N$ be the number of samples available in the dataset. Also,
 let $x_k = \{m_j\} \enspace \forall \enspace j \enspace \in \{0, 1, 2, ..., D - 1\}$ be a sample vector containing
-the measurements from each of the features of the k-th sample. Then $x = \{x_k\} \enspace \forall \enspace j \enspace
+the measurements $m_j$ from each of the features of the k-th sample. Then $x = \{x_k\} \enspace \forall \enspace j \enspace
 \in \{0, 1, 2, ..., D - 1\}$. The matrix $t = \{t_k\} \enspace \forall \enspace j \enspace
-\in \{0, 1, 2, ..., D - 1\}$ should contain the vector of the true label of each of the samples
+\in \{0, 1, 2, ..., D - 1\}$ should contain the vector representation of the true label for each of the samples
 $x_k$ in the same order.
 
 If the dataset is linearly separable, then there exists a weighing matrix $W$ such that
@@ -172,9 +175,9 @@ It is common to initialize $W(0) = 0$. The step factor $\alpha$ should then be t
 A too great value will result in oscillations of $W$ around its minimum whereas a too low value will
 require a lot more iterations than necessary. Lastly, the number of iterations has to be chosen.
 A larger number of iterations is always better, but after a certain number of iterations we will
-not gain a better $W$. So this number should not be "great enough".
+not gain a better $W$. So this number should just be "great enough".
 
-\section{The task}
+\section{The task}\label{sec:task}
 
 The purpose of this project is to design a linear classifier for the Iris dataset,
 and explore how varying the training set and features affects the performance of
@@ -187,7 +190,98 @@ In the last part, we will take a closer look at how linear separability of featu
 affects the performance of the classifier. More specifically, we will exclude the
 least linearly separable features from the dataset and evaluate the performance.
 
-\section{Implementation and results}
+\section{Implementation and results}\label{sec:implementation_and_results}
+
+The Iris dataset contains three different classes. The vector representation used
+in our implementation is listed in \autoref{tab:class_vectors}, but it should be
+said that the mapping is trivial for the classifier.
+
+\begin{figure}
+    \centering
+    \begin{tabular}{ | c | c | }
+        \hline
+        Class name $c_i$ & Vector representation $v_i$ \\
+        \hline
+        Iris Setosa & $[1 \enspace 0 \enspace 0]$ \\
+        Iris Versicolor & $[0 \enspace 1 \enspace 0]$ \\
+        Iris Virginica & $[0 \enspace 0 \enspace 1]$ \\
+        \hline
+    \end{tabular}
+    \caption{trololo}
+    \label{tab:class_vectors}
+\end{figure}
+
+The dataset is imported from a CSV file where each row represents a sample. The first four columns
+represents the measurements of the different features, whereas the last columnn specifies the label of
+the sample, e.g. which class it belongs to.
+
+\begin{figure}
+    \centering
+    \begin{tabular}{ | c | c | }
+        \hline
+        Index & Meaning \\
+        \hline
+        0 & Sepal length \\
+        1 & Sepal width \\
+        2 & Petal length \\
+        3 & Petal width \\
+        (4) & Label \\
+        \hline
+    \end{tabular}
+    \caption{Overview of the meaning of each column in the dataset CSV file.}
+    \label{tab:class_vectors}
+\end{figure}
+
+The function \lstinline{load_dataset} is first used to load the dataset from file into memory.
+Two arrays - \lstinline{samples} and \lstinline{labels} - are returned, where the true label of
+\lstinline{samples[i]} is \lstinline{labels[i]}. This dataset is further divided into a training
+dataset and a test  dataset by using the function \lstinline{split_dataset(samples, labels, split_index)},
+where \lstinline{split_index} indicates how many samples of each class should belong to the training
+data set.
+
+As described in \autoref{sec:theory}, all samples first have to be extended with a 1 as their last element.
+Thereafter, we need to convert the labels from their original string representation to a vector
+representation by the rule of \eqref{eq:class_vector}. The extended training samples together with
+the labels on vector form is fed into the implementation of a linear classifier called
+\lstinline{train_linear_classifier}. This function calculates the weighing matrix $W$ as described in
+\eqref{eq:W_iteration} for a total of \lstinline{num_iterations} number of iterations with an $\alpha$
+described by its parameter \lstinline{alpha}. Also, for each iteration the current weighing matrix
+$W(m)$ is used on the test set to predict the labels of the test samples using
+\lstinline{get_predicted_label_vectors}. These label vectors are then compared against the true
+label vectors and the MSE for this iteration is calculated using \eqref{eq:MSE}, which is implemented
+in \lstinline{get_MSE}.
+
+It was mentioned in \autoref{sec:theory} that $\alpha$ should be tuned such that the MSE neither
+oscillates (too high $\alpha$) nor does not converge (too low $\alpha$). In order to visualize
+how the choice of different $\alpha$s affect the $MSE$s as a function of the number of iterations,
+such a function has been plotted for $\alpha \enskip \in \enskip \{0.1, 0.05, 0.05, 0.01, 0.0025\}$
+in \autoref{fig:MSE_alphas_large_interval}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{../images/MSE_alphas_large_interval.png}
+    \caption{Mean Square Error (MSE) as a function of the number of iterations on W for different values
+    of $\alpha$.}
+    \label{fig:MSE_alphas_large_interval}
+\end{figure}
+
+Clearly, one can see that an $\alpha \geq 0.01$ makes either makes the MSE not change at all
+or makes it oscillate. And for $\alpha \leq 0.0025$, it takes quite a number of iterations
+for it to converge. The sweet spot seems to be $\alpha \enskip \in \enskip ( 0.0025, 0.01)$.
+By zooming in on this interval and plotting the same graphs - only for a narrower interval - in
+\autoref{fig:MSE_alphas_narrow_interval} we can more precisely find the value of $\alpha$ which
+is just small enough for the oscillations to disappear. This happens around $\alpha = 0.005$,
+and so this is the value for $\alpha$ which be used throughout the rest of the text.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{../images/MSE_alphas_narrow_interval.png}
+    \caption{Mean Square Error (MSE) as a function of the number of iterations on W for different values
+    of $\alpha$.}
+    \label{fig:MSE_alphas_narrow_interval}
+\end{figure}
+
+
 
 \section{Conclusion}
 
