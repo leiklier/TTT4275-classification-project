@@ -17,17 +17,29 @@ def load_dataset():
             sample_label_pairs.append( (sample, label) )
 
     sample_label_pairs = np.array(sample_label_pairs)
-    np.random.shuffle(sample_label_pairs)
-
     samples, labels = np.transpose(sample_label_pairs)
-    samples = np.array(samples)
-    labels = np.array(labels)
 
     return samples, labels
 
+
 def split_dataset(samples, labels, split_index):
-    first_set = samples[ :split_index], labels[ :split_index]
-    last_set = samples[split_index: ], labels[split_index: ]
+    classes = np.unique(labels)
+
+    indices_by_class = []
+    for curr_class in classes:
+        indices = np.where(labels == curr_class)[0]
+        indices_by_class.append(indices)
+    indices_by_class = np.array(indices_by_class)
+
+
+    first_set_indices_by_class = indices_by_class[ :, :split_index ]
+    last_set_indices_by_class = indices_by_class[ :, split_index:]
+
+    first_set_indices = first_set_indices_by_class.flatten()
+    last_set_indices = last_set_indices_by_class.flatten()
+
+    first_set = samples.take(first_set_indices), labels.take(first_set_indices)
+    last_set = samples.take(last_set_indices), labels.take(last_set_indices)
 
     return first_set, last_set
 
@@ -182,9 +194,12 @@ def main():
                 3: 'petal width'}
     plot_histograms(all_samples, all_labels, features)
 
-    train_dataset, test_dataset = split_dataset(all_samples, all_labels, 30)
+    train_dataset, test_dataset = split_dataset(all_samples, all_labels, split_index=30)
     train_samples, train_labels = train_dataset
     test_samples, test_labels = test_dataset
+
+
+    print(train_labels)
 
     # We need to add an awkward 1 to x_k as described on page 15:
     train_samples = np.array([ np.append(sample, [1]) for sample in train_samples ])
