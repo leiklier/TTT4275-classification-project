@@ -47,22 +47,23 @@ def split_dataset(samples, labels, split_index):
 #      -- LINEAR CLASSIFIER --       #
 ######################################
 
-# Implements eq. (3.19) using
-# predictions[k] = g_k
-# targets[k] = t_k
-def MSE(predictions, targets):
-    error = predictions-targets
-    error_T = np.transpose(error)
-    return np.sum(np.matmul(error_T,error)) / predictions.shape[0]
-
 # Implements eq. (3.20) using
 # samples = x
+# Returns vectors such as [0.321 0.485 0.843]^T
 def get_predicted_label_vectors(samples, W):
     exponentials = np.array([ np.exp(-(np.matmul(W, sample))) for sample in samples ])
     denominators = exponentials + 1
     predictions = 1 / denominators
 
     return predictions
+
+# Finds the class which is closest to a given label vector
+# i.e.: [0.321 0.485 0.843]^T returns [0 0 1]^T
+def get_rounded_label_vector(label_vector):
+    index = np.argmax(label_vector)
+    rounded_vector_label = np.array([ i == index for i in range(len(label_vector)) ], dtype=np.uint8)
+
+    return rounded_vector_label
 
 # Implements eq. (3.22) and eq. (3.23) using
 # predicted_labels[k] = g_k
@@ -75,7 +76,7 @@ def get_next_weight_matrix(predicted_labels, labels, samples, previous_W, alpha=
     num_classes = 3
     grad_g_MSE = predicted_labels - labels # dim (30,3)
     grad_z_g = predicted_labels * (1 - predicted_labels) # dim (30,3)
-    # print(predicted_labels)
+
     grad_W_z = np.array([ np.reshape(sample, (1, num_features+1)) for sample in samples ])
 
     grad_W_MSE = np.sum( np.matmul(np.reshape(grad_g_MSE[k] * grad_z_g[k], (num_classes, 1)), grad_W_z[k]) for k in range(len(grad_g_MSE)) )
@@ -88,11 +89,12 @@ def get_next_weight_matrix(predicted_labels, labels, samples, previous_W, alpha=
 # For each iteration, it outputs its error rate by comparing against
 # the test set (test_samples, test_labels)
 # It outputs the weighing matrix W and the rate of errors per iteration
-def train_linear_classifier(train_samples, train_label_vectors, test_samples, test_label_vectors, features, num_iterations=100, alpha=0.01):
+def train_linear_classifier(train_samples, train_label_vectors, test_samples, test_label_vectors, features, num_iterations=1000, alpha=0.01):
     classes = np.unique(train_label_vectors)
     num_classes = 3
     num_features = len(features)
 
+    MSE_per_iteration = []
     error_rate_per_iteration = []
 
     # Initialize weight matrix
@@ -105,19 +107,29 @@ def train_linear_classifier(train_samples, train_label_vectors, test_samples, te
 
         # Testing
         predicted_test_label_vectors = get_predicted_label_vectors(test_samples, W)
-        predicted_test_label_vectors = np.array([ get_rounded_label_vector(label_vector) for label_vector in predicted_test_label_vectors ])
+        predicted_test_label_vectors_rounded = np.array([ \
+            get_rounded_label_vector(label_vector) \
+            for label_vector in predicted_test_label_vectors \
+        ])
 
-        error_rate = get_error_rate(predicted_test_label_vectors, test_label_vectors)
-        error_rate_per_iteration.append(error_rate)
+        curr_MSE = get_MSE(predicted_test_label_vectors, test_label_vectors)
+        MSE_per_iteration.append(curr_MSE)
 
-    return W, error_rate_per_iteration
+        curr_error_rate = get_error_rate(predicted_test_label_vectors_rounded, test_label_vectors)
+        error_rate_per_iteration.append(curr_error_rate)
 
-def get_rounded_label_vector(label_vector):
-    index = np.argmax(label_vector)
-    rounded_vector_label = np.array([ i == index for i in range(len(label_vector)) ], dtype=np.uint8)
+    return W, np.array(MSE_per_iteration), np.array(error_rate_per_iteration)
 
-    return rounded_vector_label
+# Implements eq. (3.19) using
+# predicted_label_vectors[k] = g_k
+# true_label_vectors[k] = t_k
+def get_MSE(predicted_label_vectors, true_label_vectors):
+    error = predicted_label_vectors - true_label_vectors
+    error_T = np.transpose(error)
+    return np.sum(np.matmul(error_T,error)) / 2
 
+# Assumes that predicted_label_vectors are rounded
+# using get_rounded_label_vector
 def get_error_rate(predicted_label_vectors, true_label_vectors):
     num_samples = len(true_label_vectors)
     classes = np.unique(true_label_vectors)
@@ -205,11 +217,32 @@ def plot_confusion_matrix(confusion_matrix, classes, name="Confusion matrix"):
 
     plt.show()
 
-def plot_error_rate(error_rate_per_iteration, start_index=0):
-    iteration_numbers = range(start_index, len(error_rate_per_iteration))
-    error_rate_per_iteration = error_rate_per_iteration[start_index: ]
+def plot_MSEs(MSEs_per_alpha, alphas):
+    for i in range(len(alphas)):
+        MSEs = MSEs_per_alpha[i]
+        alpha = alphas[i]
 
-    plt.plot(iteration_numbers, error_rate_per_iteration)
+        iteration_numbers = range(len(MSEs))
+        plt.plot(iteration_numbers, MSEs, label='$\\alpha={' + str(alpha) + '}$')
+
+    plt.xlabel("Iteration number")
+    plt.ylabel("MSE")
+    plt.legend()
+
+    plt.show()
+
+def plot_error_rates(error_rates_per_alpha, alphas):
+    for i in range(len(alphas)):
+        error_rates = error_rates_per_alpha[i]
+        alpha = alphas[i]
+        print(error_rates[:10])
+
+        iteration_numbers = range(len(error_rates))
+        plt.plot(iteration_numbers, error_rates, label='$\\alpha={' + str(alpha) + '}$')
+
+    plt.xlabel("Iteration number")
+    plt.ylabel("Error rate")
+    plt.legend()
 
     plt.show()
 
@@ -218,10 +251,10 @@ def main():
     all_samples, all_labels = load_dataset()
 
     # Map indices of features to human friendly names:
-    features = {0: 'sepal length',
-                1: 'sepal width',
-                2: 'petal length',
-                3: 'petal width'}
+    features = {0: 'Sepal length',
+                1: 'Sepal width',
+                2: 'Petal length',
+                3: 'Petal width'}
     plot_histograms(all_samples, all_labels, features)
 
     train_dataset, test_dataset = split_dataset(all_samples, all_labels, split_index=30)
@@ -232,18 +265,33 @@ def main():
     train_samples = np.array([ np.append(sample, [1]) for sample in train_samples ])
     test_samples = np.array([ np.append(sample, [1]) for sample in test_samples ])
 
-    classes = np.unique(train_labels) # Navn på de ulike typene blomster
+    classes = np.unique(train_labels)
 
     train_label_vectors = np.array([ label_string_to_vector(label, classes) for label in train_labels])
     test_label_vectors = np.array([ label_string_to_vector(label, classes) for label in test_labels])
 
-    W, error_rate_per_iteration = train_linear_classifier( \
+    W, _, _ = train_linear_classifier( \
         train_samples, train_label_vectors, \
-        test_samples, test_label_vectors, \
-        features, num_iterations=1000, alpha=0.003 \
+        train_samples, train_label_vectors, \
+        features, num_iterations=300, alpha=0.005 \
     )
 
-    plot_error_rate(error_rate_per_iteration)
+    alphas=[0.0025, 0.005, 0.0075, 0.01]
+    MSEs_per_alpha = []
+    error_rates_per_alpha = []
+    for alpha in alphas:
+        _, MSE_per_iteration, error_rate_per_iteration = train_linear_classifier( \
+            train_samples, train_label_vectors, \
+            test_samples, test_label_vectors, \
+            features, alpha=alpha\
+        )
+        MSEs_per_alpha.append(MSE_per_iteration)
+        error_rates_per_alpha.append(error_rate_per_iteration)
+
+    print("Shape:", np.array(error_rates_per_alpha).shape)
+
+    plot_MSEs(MSEs_per_alpha, alphas)
+    plot_error_rates(error_rates_per_alpha, alphas)
 
     predicted_test_label_vectors = get_predicted_label_vectors(test_samples, W)
     predicted_test_label_vectors = np.array([ get_rounded_label_vector(label_vector) for label_vector in predicted_test_label_vectors ])
