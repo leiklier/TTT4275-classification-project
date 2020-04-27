@@ -11,8 +11,8 @@ def load_dataset():
         for row in csv_file:
             cells = [ cell.strip() for cell in row.decode().split(',') ]
 
-            label = cells[ len(cells) - 1 ]
-            sample = np.array(cells[:len(cells) - 1], dtype=np.float32)
+            label = cells[ len(cells)-1 ]
+            sample = np.array(cells[ :len(cells)-1], dtype=np.float32)
 
             sample_label_pairs.append( (sample, label) )
 
