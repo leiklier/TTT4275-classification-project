@@ -10,3 +10,4 @@ mnist_datasets/*
 *_latexmk
 *.synctex.gz
 *.out
+*.toc

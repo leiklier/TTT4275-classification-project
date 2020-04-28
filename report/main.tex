@@ -9,7 +9,7 @@
 \usepackage{listings}
 \lstset{language=Python,keywordstyle={\bfseries \color{blue}}}
 \usepackage{xparse}
-\usepackage[pdfborderstyle={/S/U/W 0}, colorlinks=true,allcolors=blue]{hyperref}
+\usepackage[pdfborderstyle={/S/U/W 0}]{hyperref}
 \urlstyle{same}
 
 \begin{document}
@@ -19,6 +19,10 @@
 \date{April 2020}
 
 \maketitle
+\newpage
+
+\tableofcontents
+\newpage
 
 \section{Introduction}\label{sec:introduction}
 The project described in this report has the goal of classifying samples of Iris flowers into
@@ -34,7 +38,7 @@ vary according to the class of flower. Thus, it seems natural to use those dimen
 for the classification. A dataset consisting of such measurements has been used in this project. 50
 samples from each class has been provided. Their distributions are summarized in \autoref{fig:histograms}.
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=0.9\textwidth]{../images/iris_histograms.png}
     \caption{Histograms for each of the attributes of the Iris flowers.}
@@ -259,41 +263,32 @@ in \autoref{fig:MSE_alphas_large_interval}.
 
 \begin{figure}
     \centering
-    \subfloat[Large interval]{%
-      \includegraphics[width=0.5\textwidth]{../images/MSE_alphas_large_interval.png}%
-      \label{fig:MSE_alphas_large_interval}%
+    \subfloat[MSE]{%
+      \includegraphics[width=0.55\textwidth]{../images/MSE_alphas_30_first.png}%
+      \label{fig:MSE_alphas_30_first}%
     }
-    \subfloat[Narrow interval]{%
-      \includegraphics[width=0.5\textwidth]{../images/MSE_alphas_narrow_interval.png}%
-      \label{fig:MSE_alphas_narrow_interval}%
+    \subfloat[Error rate for $\alpha=0.005$]{%
+      \includegraphics[width=0.45\textwidth]{../images/error_rate_30_first.png}%
+      \label{fig:error_rate_30_first}%
     }
-    \caption{Mean Square Error (MSE) as a function of the number of iterations on W for different values
-    of $\alpha$.}
+    \caption{Mean Square Error (MSE) and error rate as a function of the number of iterations on W
+    for different values of $\alpha$. Using 30 first samples for training}
 \end{figure}
 
-Clearly, one can see that an $\alpha \geq 0.01$ makes either makes the MSE not change at all
-or makes it oscillate. And for $\alpha \leq 0.0025$, it takes quite a number of iterations
-for it to converge. The sweet spot seems to be $\alpha \enskip \in \enskip ( 0.0025, 0.01)$.
-By zooming in on this interval and plotting the same graphs - only for a narrower interval - in
-\autoref{fig:MSE_alphas_narrow_interval} we can more precisely find the value of $\alpha$ which
-is just small enough for the oscillations to disappear. This happens around $\alpha = 0.005$,
-and so this is the value for $\alpha$ which be used throughout the rest of the text.
+Clearly, one can see that an $\alpha \geq 0.0075$ makes the MSE oscillate as a function of the number
+of iterations. This is an indication of that the \eqref{eq:W_iteration} makes the MSE overshoot its
+minimum value instead of monotonically approaching it. And for $\alpha \leq 0.0025$ it converges
+too slowly. Thus $\alpha = 0.005$ seems to be the sweet spot, and so is the value which will be used
+for this partitioning of the dataset.
 
 One further has to decide on the number of iterations necessary for the training to converge. This
-is impossible to estimate from \autoref{fig:MSE_alphas_narrow_interval}. In order to find this out,
+is impossible to estimate from \autoref{fig:MSE_alphas_30_first}. In order to find this out,
 we have to plot the error rate as a function of the number of iterations. This has been done in
-\autoref{fig:error_rate}. By reading the graph, the error rate seems to stop
+\autoref{fig:error_rate_30_first}. By reading the graph, the error rate seems to stop
 decending after \~300 iterations. It is worth noting that the true error rate actually continues to
 decend, but since we have a discrete number of test samples, the discrete error rate can only decrement
 by a discrete number of samples and so would not be able to decrease any further. This may prove
 different for larger datasets, but either way the increase in performance would only be marginal.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\textwidth]{../images/error_rate_by_iteration_number.png}
-    \caption{Error rate as a function of the number of iterations on W for $\alpha = 0.005$.}
-    \label{fig:error_rate}
-\end{figure}
 
 With these values, we get an error rate of $5\%$ the test set and $3.33\%$ on the training set. This
 also seems to be quite reasonable for a linear classifier: By inspecting \autoref{fig:petal_scatter_plot},
@@ -322,8 +317,49 @@ those classes are the most overlapping.
 
 Now we turn our attention into researching how the choice of train samples affect the performance of
 the classifier. Instead of using the first 30 samples for training, we will use the last 30 samples.
-The same procedure for tuning $\alpha$ and number of iterations used on this new partitioning.
+The same procedure for tuning $\alpha$ and number of iterations is used on this new partitioning.
+$MSE$ does not seem to converge earlier in \autoref{fig:MSE_alphas_30_last}, and so
+$\alpha = 0.005$ is used. By inspecting the error rate in \autoref{fig:error_rate_30_last}, we observe that we
+need to use 400 iterations in order for the error rate to approach its minimum. This results in an error rate of
+$1.6\%$ for the test set and $5.5\%$ for the training set.
 
+\begin{figure}
+    \centering
+    \subfloat[MSE]{%
+      \includegraphics[width=0.55\textwidth]{../images/MSE_alphas_30_last.png}%
+      \label{fig:MSE_alphas_30_last}%
+    }
+    \subfloat[Error rate for $\alpha=0.005$]{%
+      \includegraphics[width=0.45\textwidth]{../images/error_rate_30_last.png}%
+      \label{fig:error_rate_30_last}%
+    }
+    \caption{Mean Square Error (MSE) and error rate as a function of the number of iterations on W
+    for different values of $\alpha$. Using 30 last samples for training.}
+\end{figure}
+
+It may at first seem reasonable that this linear classifier performs better with the last 30 samples for training
+since it  has a much lower error rate on the test set. However, as the cofusion matrices in \autoref{fig:CM_30_last}
+reveals, it actually has just a similar performance - the classifier misclassifies in total 6 Versicolors as
+Virginica. So in this case, the choice of training samples has no impact on the overall performance of the
+classifier.
+
+\begin{figure}
+    \centering
+    \subfloat[Test dataset]{%
+      \includegraphics[width=0.45\textwidth]{../images/CM_test_30_last.png}%
+      \label{fig:CM_test_30_last}%
+    }\qquad
+    \subfloat[Train dataset]{%
+      \includegraphics[width=0.45\textwidth]{../images/CM_train_30_last.png}%
+      \label{fig:CM_train_30_last}%
+    }
+    \caption{Confusion matrices gained by using the last 30 samples as train dataset;%
+    $\alpha = 0.005$; 400 iterations on $W$.}\label{fig:CM_30_last}
+\end{figure}
+
+From \autoref{sec:introduction} we saw how Sepal width and Sepal length was the two features which overlapped
+the most in measurements, meaning they were the least linearly separable. By inspecting \autoref{fig:histograms},
+we see that the most overlap occurs for the Sepal width.
 
 \section{Conclusion}
 
