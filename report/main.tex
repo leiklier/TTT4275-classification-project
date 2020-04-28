@@ -1,7 +1,7 @@
-% !TeX root = ./main.tex
 \documentclass{article}
 
 \usepackage[utf8]{inputenc}
+\usepackage{subfig}
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -194,7 +194,7 @@ least linearly separable features from the dataset and evaluate the performance.
 
 The Iris dataset contains three different classes. The vector representation used
 in our implementation is listed in \autoref{tab:class_vectors}, but it should be
-said that the mapping is trivial for the classifier.
+said that the mapping is trivial for the performance of the classifier.
 
 \begin{figure}
     \centering
@@ -259,10 +259,16 @@ in \autoref{fig:MSE_alphas_large_interval}.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{../images/MSE_alphas_large_interval.png}
+    \subfloat[Large interval]{%
+      \includegraphics[width=0.5\textwidth]{../images/MSE_alphas_large_interval.png}%
+      \label{fig:MSE_alphas_large_interval}%
+    }
+    \subfloat[Narrow interval]{%
+      \includegraphics[width=0.5\textwidth]{../images/MSE_alphas_narrow_interval.png}%
+      \label{fig:MSE_alphas_narrow_interval}%
+    }
     \caption{Mean Square Error (MSE) as a function of the number of iterations on W for different values
     of $\alpha$.}
-    \label{fig:MSE_alphas_large_interval}
 \end{figure}
 
 Clearly, one can see that an $\alpha \geq 0.01$ makes either makes the MSE not change at all
@@ -273,14 +279,50 @@ By zooming in on this interval and plotting the same graphs - only for a narrowe
 is just small enough for the oscillations to disappear. This happens around $\alpha = 0.005$,
 and so this is the value for $\alpha$ which be used throughout the rest of the text.
 
+One further has to decide on the number of iterations necessary for the training to converge. This
+is impossible to estimate from \autoref{fig:MSE_alphas_narrow_interval}. In order to find this out,
+we have to plot the error rate as a function of the number of iterations. This has been done in
+\autoref{fig:error_rate}. By reading the graph, the error rate seems to stop
+decending after \~300 iterations. It is worth noting that the true error rate actually continues to
+decend, but since we have a discrete number of test samples, the discrete error rate can only decrement
+by a discrete number of samples and so would not be able to decrease any further. This may prove
+different for larger datasets, but either way the increase in performance would only be marginal.
+
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{../images/MSE_alphas_narrow_interval.png}
-    \caption{Mean Square Error (MSE) as a function of the number of iterations on W for different values
-    of $\alpha$.}
-    \label{fig:MSE_alphas_narrow_interval}
+    \includegraphics[width=0.8\textwidth]{../images/error_rate_by_iteration_number.png}
+    \caption{Error rate as a function of the number of iterations on W for $\alpha = 0.005$.}
+    \label{fig:error_rate}
 \end{figure}
 
+With these values, we get an error rate of $5\%$ the test set and $3.33\%$ on the training set. This
+also seems to be quite reasonable for a linear classifier: By inspecting \autoref{fig:petal_scatter_plot},
+we observe that \~5 out of 50 samples are not linearly separable by their Petal dimensions.
+In order to gain further insights into which samples where misclassified, a confusion matrix comes in
+handy. Such a matrix has the different true labels listed along the columns and the predicted labels
+along the columns. Each cell then gives the number of samples of a certain true label was classified
+as a particular predicted label. The confusion matrices for both the test set and the training set are
+plotted in \autoref{fig:CM_30_first}. We see that a trend is that samples of Versicolor get classified
+as Virginica. This is in compliance with \autoref{fig:histograms}, where we see that samples of
+those classes are the most overlapping.
+
+\begin{figure}
+    \centering
+    \subfloat[Test dataset]{%
+      \includegraphics[width=0.45\textwidth]{../images/CM_test_30_first.png}%
+      \label{fig:CM_test_30_first}%
+    }\qquad
+    \subfloat[Train dataset]{%
+      \includegraphics[width=0.45\textwidth]{../images/CM_train_30_first.png}%
+      \label{fig:CM_train_30_first}%
+    }
+    \caption{Confusion matrices gained by using the first 30 samples as train dataset;%
+    $\alpha = 0.005$; 300 iterations on $W$.}\label{fig:CM_30_first}
+\end{figure}
+
+Now we turn our attention into researching how the choice of train samples affect the performance of
+the classifier. Instead of using the first 30 samples for training, we will use the last 30 samples.
+The same procedure for tuning $\alpha$ and number of iterations used on this new partitioning.
 
 
 \section{Conclusion}
