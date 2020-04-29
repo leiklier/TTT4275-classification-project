@@ -50,16 +50,18 @@ def get_all_features():
             1: 'Sepal width',
             2: 'Petal length',
             3: 'Petal width'}
-"""
+
 def remove_feature(samples, feature_index):
-    print(samples.shape)
-    #                                           ,- delete along column axis
-    # return np.delete(samples, feature_index, axis=1)
     samples_without_feature = []
     for sample in samples:
-        new_sample = []
-"""
+        new_sample = []
+        for i in range(len(sample)):
+            if i != feature_index:
+                new_sample.append(sample[i])
+        new_sample = np.array(new_sample)
+        samples_without_feature.append(new_sample)
 
+    return np.array(samples_without_feature)
 
 
 ######################################
@@ -118,6 +120,7 @@ def train_linear_classifier(train_samples, train_label_vectors, test_samples, te
 
     # Initialize weight matrix
     W = np.zeros((num_classes, num_features+1))
+    print("Shape of W:", W.shape)
 
     for curr_iteration in range(num_iterations):
         # Training
@@ -278,11 +281,10 @@ def show_histograms():
 
     plot_histograms(all_samples, all_labels, features)
 
-def show_MSE_plots(train_dataset, test_dataset, alphas=[0.0025, 0.005, 0.0075, 0.01]):
+def show_MSE_plots(train_dataset, test_dataset, features, alphas):
     train_samples, train_labels = train_dataset
     test_samples, test_labels = test_dataset
 
-    features = get_all_features()
     classes = np.unique(train_labels)
 
      # We need to add an awkward 1 to x_k as described on page 15:
@@ -304,11 +306,10 @@ def show_MSE_plots(train_dataset, test_dataset, alphas=[0.0025, 0.005, 0.0075, 0
 
     plot_MSEs(MSEs_per_alpha, alphas)
 
-def show_error_rate_plot(train_dataset, test_dataset, alpha=0.005):
+def show_error_rate_plot(train_dataset, test_dataset, features, alpha=0.005):
     train_samples, train_labels = train_dataset
     test_samples, test_labels = test_dataset
 
-    features = get_all_features()
     classes = np.unique(train_labels)
 
      # We need to add an awkward 1 to x_k as described on page 15:
@@ -329,11 +330,10 @@ def show_error_rate_plot(train_dataset, test_dataset, alpha=0.005):
 
     plot_error_rates(error_rates_per_alpha=[error_rate], alphas=[alpha])
 
-def show_confusion_matrices(train_dataset, test_dataset, num_iterations, alpha=0.005):
+def show_confusion_matrices(train_dataset, test_dataset, features, num_iterations, alpha=0.005):
     train_samples, train_labels = train_dataset
     test_samples, test_labels = test_dataset
 
-    features = get_all_features()
     classes = np.unique(train_labels)
 
      # We need to add an awkward 1 to x_k as described on page 15:
@@ -373,60 +373,6 @@ def show_confusion_matrices(train_dataset, test_dataset, num_iterations, alpha=0
     print(f'Error rate for train set: {error_rate_train}')
 
 
-def show_confusion_matrices_without_sepal_width():
-    all_samples, all_labels = load_dataset()
-    print(all_samples[0])
-    # all_samples = remove_feature(all_samples, feature_index=1)
-
-    # Map indices of features to human friendly names:
-    features = {0: 'Sepal length',
-                1: 'Petal length',
-                2: 'Petal width'}
-
-    classes = np.unique(all_labels)
-
-    train_dataset, test_dataset = split_dataset(all_samples, all_labels, split_index=30)
-    train_samples, train_labels = train_dataset
-    test_samples, test_labels = test_dataset
-
-
-     # We need to add an awkward 1 to x_k as described on page 15:
-    train_samples = np.array([ np.append(sample, [1]) for sample in train_samples ])
-    test_samples = np.array([ np.append(sample, [1]) for sample in test_samples ])
-
-    # Get vector representation of label strings
-    train_label_vectors = np.array([ label_string_to_vector(label, classes) for label in train_labels])
-    test_label_vectors = np.array([ label_string_to_vector(label, classes) for label in test_labels])
-
-    # Here we use num_iterations=30 annd alpha=0.005 because these values proved to
-    # give the best results, as discussed in the report
-    W, _, _ = train_linear_classifier( \
-        train_samples, train_label_vectors, \
-        train_samples, train_label_vectors, \
-        features, num_iterations=300, alpha=0.005 \
-    )
-
-    predicted_test_label_vectors = get_predicted_label_vectors(test_samples, W)
-    predicted_test_label_vectors = np.array([ get_rounded_label_vector(label_vector) for label_vector in predicted_test_label_vectors ])
-    predicted_test_label_strings = np.array([ label_vector_to_string(label, classes) for label in predicted_test_label_vectors ])
-
-    predicted_train_label_vectors = get_predicted_label_vectors(train_samples, W)
-    predicted_train_label_vectors = np.array([ get_rounded_label_vector(label_vector) for label_vector in predicted_train_label_vectors ])
-    predicted_train_label_strings = np.array([ label_vector_to_string(label, classes) for label in predicted_train_label_vectors ])
-
-    confusion_matrix_test = get_confusion_matrix(predicted_test_label_strings, test_labels)
-    confusion_matrix_train = get_confusion_matrix(predicted_train_label_strings, train_labels)
-
-    plot_confusion_matrix(confusion_matrix_test, classes, name="CM for test set")
-    plot_confusion_matrix(confusion_matrix_train, classes, name="CM for train set")
-
-    error_rate_test = get_error_rate(predicted_test_label_vectors, test_label_vectors)
-    error_rate_train = get_error_rate(predicted_train_label_vectors, train_label_vectors)
-
-    print(f'Error rate for test set: {error_rate_test}')
-    print(f'Error rate for train set: {error_rate_train}')
-
-
 ###########################
 #        MAIN             #
 ###########################
@@ -441,7 +387,7 @@ def main():
         "Show MSE by number of samples with training set = 30 last",
         "Show error rate by number of samples with training set = 30 last",
         "Show confusion matrices and error rates with training set = 30 last",
-        "Show  confusion matrices and error rates without sepal length",
+        "Show MSE by number of samples without sepal length",
         "** QUIT **"
     ], title="Choose an action to perform")
     selected_action = terminal_menu.show()
@@ -453,40 +399,68 @@ def main():
         # Train dataset is FIRST 30 samples:
         all_samples, all_labels = load_dataset()
         train_dataset, test_dataset = split_dataset(all_samples, all_labels, split_index=30)
-        show_MSE_plots(train_dataset, test_dataset)
+        features = get_all_features()
+
+        show_MSE_plots(train_dataset, test_dataset, features, alphas=[0.0025, 0.005, 0.0075, 0.01])
 
     elif selected_action == 2:
         # Train dataset is FIRST 30 samples:
         all_samples, all_labels = load_dataset()
         train_dataset, test_dataset = split_dataset(all_samples, all_labels, split_index=30)
-        show_error_rate_plot(train_dataset, test_dataset, alpha=0.005)
+        features = get_all_features()
+
+        show_error_rate_plot(train_dataset, test_dataset, features, alpha=0.005)
 
     elif selected_action == 3:
         # Train dataset is FIRST 30 samples:
         all_samples, all_labels = load_dataset()
         train_dataset, test_dataset = split_dataset(all_samples, all_labels, split_index=30)
-        show_confusion_matrices(train_dataset, test_dataset, num_iterations=300, alpha=0.005)
+        show_confusion_matrices(train_dataset, test_dataset, features, num_iterations=300, alpha=0.005)
 
     elif selected_action == 4:
         # Train dataset is LAST 30 samples:
         all_samples, all_labels = load_dataset()
         test_dataset, train_dataset = split_dataset(all_samples, all_labels, split_index=20)
-        show_MSE_plots(train_dataset, test_dataset)
+        features = get_all_features()
+
+        show_MSE_plots(train_dataset, test_dataset, features, alphas=[0.0025, 0.005, 0.0075, 0.01])
 
     elif selected_action == 5:
         # Train dataset is LAST 30 samples:
         all_samples, all_labels = load_dataset()
         test_dataset, train_dataset = split_dataset(all_samples, all_labels, split_index=20)
-        show_error_rate_plot(train_dataset, test_dataset, alpha=0.005)
+        features = get_all_features()
+
+        show_error_rate_plot(train_dataset, test_dataset, features, alpha=0.005)
 
     elif selected_action == 6:
         # Train dataset is FIRST 30 samples:
         all_samples, all_labels = load_dataset()
         test_dataset, train_dataset = split_dataset(all_samples, all_labels, split_index=20)
-        show_confusion_matrices(train_dataset, test_dataset, num_iterations=400, alpha=0.005)
+        show_confusion_matrices(train_dataset, test_dataset, features, num_iterations=400, alpha=0.005)
 
     elif selected_action == 7:
-        show_confusion_matrices_without_sepal_width()
+        all_samples, all_labels = load_dataset()
+        train_dataset, test_dataset = split_dataset(all_samples, all_labels, split_index=30)
+
+        train_samples, train_labels = train_dataset
+        test_samples, test_labels = test_dataset
+
+        # Remove sepal width:
+        train_samples = remove_feature(train_samples, 1)
+        test_samples = remove_feature(test_samples, 1)
+
+        train_dataset = train_samples, train_labels
+        test_dataset = test_samples, test_labels
+
+        features = {0: 'Sepal length',
+                    1: 'Petal length',
+                    2: 'Petal width'}
+        print(train_samples[0])
+
+        show_MSE_plots(train_dataset, test_dataset, features, alphas=[0.005, 0.006, 0.007])
+        show_error_rate_plot(train_dataset, test_dataset, features, alpha=0.006)
+        show_confusion_matrices(train_dataset, test_dataset, features, num_iterations=1000, alpha=0.006)
 
     else:
         exit(0)
