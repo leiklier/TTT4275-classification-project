@@ -31,7 +31,17 @@
 
 \maketitle
 \begin{abstract}
-    The choice of
+    In this report, the impact of choosing different samples for training and
+    testing for a linear classifier on the IRIS dataset has been analyzed. No change in
+    performance was found, however it resulted in different error rates for the respective
+    partitions which also was expected to happen.
+
+    Furthermore, the choise of feature selection was analyzed in the same manner.
+    Here, it was observed that removing the most overlapping features resulted in requiring
+    a larger $\alpha$ and more iterations on $W$ just to obtain the same error rates. Thus
+    it appears to be the case that removing such features only results in worse performance.
+    The dataset was however quite small, and so no conclusions should be drawn on a more
+    general basis.
  \end{abstract}
 \newpage
 
@@ -116,7 +126,7 @@ the measurements $m_j$ from each of the features of the k-th sample. Then $x = \
 $x_k$ in the same order. We also need to add a 1 as the last element of the sample vectors such that
 $[ x^T \enspace 1 ^T ] \rightarrow x$. This is done so that the further calculations can include constants.
 
-If the dataset is linearly separable, then there exists a weighing matrix $W$ of dimensions $C \times (D+1)$ such
+If the dataset is linearly separable, then there exists \cite[p. 16]{compendium} a weighing matrix $W$ of dimensions $C \times (D+1)$ such
 that
 \begin{equation}
     z_k = Wx_k \label{eq:z_k}
@@ -234,7 +244,7 @@ said that the mapping is trivial for the performance of the classifier.
         Iris Virginica & $[0 \enspace 0 \enspace 1]^T$ \\
         \hline
     \end{tabular}
-    \caption{trololo}
+    \caption{Relationship between the classes and their vector representation.}
     \label{tab:class_vectors}
 \end{figure}
 
