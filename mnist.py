@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
@@ -28,7 +29,7 @@ def load_train_dataset(num_samples=10000):
     train_labels = read_idx('./mnist_datasets/train-labels.idx1-ubyte')
 
     # Flatten images
-    train_data = np.reshape(raw_train, (60000, 28*28))
+    train_data = np.reshape(raw_train, (MAX_TRAIN_SAMPLES, 28*28))
 
     # Truncate  size to num_samples
     train_data = train_data[:num_samples]

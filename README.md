@@ -24,6 +24,3 @@ Please install the prerequisities before running the scripts:
 ```
 pip3 install -r requirements.txt
 ```
-
-In order to run `mnist.py`, the dataset has to  be downloaded. The files can be downloaded from [The Mnist Database](http://yann.lecun.com/exdb/mnist/). Gunzip the
-`.gzip`-files and move them to the `mnist_datasets` folder.
