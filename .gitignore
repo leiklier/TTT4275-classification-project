@@ -5,7 +5,7 @@ mnist_datasets/*
 
 *.aux
 *.log
-*.pdf
+# *.pdf
 *.fls
 *_latexmk
 *.synctex.gz
