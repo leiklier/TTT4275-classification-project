@@ -5,6 +5,7 @@ import pickle as pkl
 import struct
 import seaborn as sn
 import pandas as pd
+import time
 from scipy.spatial import distance
 from sklearn.cluster import KMeans
 
