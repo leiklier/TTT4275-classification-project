@@ -30,6 +30,9 @@
 \date{April 2020}
 
 \maketitle
+\begin{abstract}
+    The choice of
+ \end{abstract}
 \newpage
 
 \tableofcontents
@@ -497,7 +500,20 @@ we actually got a  better estimator. But as we saw, both choices gave the same a
 on the dataset as a whole. This leads us to draw the conclusion that it is important to choose
 both a train set and a test set which are  representable for the whole population.
 
-In the last section we studied how
+In the last section we studied how removing features with a lot of overlap affected the performance
+of the classifier. Our initial assumption was that the classifier would perform better - after all,
+a linear classifier works best on linearly separable data. However, this was not the case. We experienced
+that we had to iterate the weighing matrix $W$ a lot more times just to achieve the same error rates. And
+the classifier would not perform any better by further increasing the number of iterations. This makes us
+draw the conclusion that removing non-linear features does not improve the performance of a linear classifier.
+
+It should however be noted that we only had 50 samples of each feature, and so our dataset was from a
+statistical point of view quite small. With only one misclassified sample give or take in difference,
+it is hard to tell whether or not the classifier actually performed marginally better or if we just were
+unlucky with our dataset. Also, we cannnot say on a general basis that removing non-linear features does
+not improve performance; this may be the case only for samples following this exact distribution. New
+research with a larger dataset, and with samples following different distributions should be conducted
+in order to gain further insight into this.
 
 \printbibliography
 
