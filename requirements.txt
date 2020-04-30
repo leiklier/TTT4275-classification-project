@@ -3,3 +3,5 @@ numpy
 seaborn
 pandas
 matplotlib
+scipy
+sklearn
