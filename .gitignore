@@ -11,3 +11,7 @@ mnist_datasets/*
 *.synctex.gz
 *.out
 *.toc
+*.bcf
+*.bbl
+*.blg
+*.run.xml

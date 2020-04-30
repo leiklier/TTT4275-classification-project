@@ -1,13 +1,24 @@
 \documentclass{article}
 
+% Language and encoding
 \usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+% Graphics
 \usepackage{subfig}
 \usepackage{graphicx}
+
+% Mathematics and code
 \usepackage{amsmath}
 \usepackage{amsfonts}
-\usepackage[english]{babel}
 \usepackage{listings}
 \lstset{language=Python,keywordstyle={\bfseries \color{blue}}}
+
+% References
+\usepackage[style=numeric]{biblatex}
+\addbibresource{bibliography.bib}
+
+% Hyperlinks
 \usepackage{xparse}
 \usepackage[pdfborderstyle={/S/U/W 0}]{hyperref}
 \urlstyle{same}
@@ -59,7 +70,7 @@ Iris Versocolor samples. This line could then be used as a rule for classifying 
 by just calculating which side of the line the new sample is on. It is not equally easy to
 separate Versicolor from Virginica by using the same method - some of the Virginica samples overlap
 with the Versicolor samples, and would then by misclassified. However, the error rate would be
-quite small if the line is drawn in the middle of where the classes overlap. And in some case,
+quite small if the line is drawn in the middle of where the classes overlap. And in some cases,
 such an error rate would be considered acceptable.
 
 \begin{figure}
@@ -96,17 +107,19 @@ $\vec{v_2} = [ 0\enspace 1\enspace  0 ]^T$
 Furthermore, we introduce the sample matrix $x$, which holds the measurements of the features from
 all of the labeled samples. Let $N$ be the number of samples available in the dataset. Also,
 let $x_k = \{m_j\} \enspace \forall \enspace j \enspace \in \{0, 1, 2, ..., D - 1\}$ be a sample vector containing
-the measurements $m_j$ from each of the features of the k-th sample. Then $x = \{x_k\} \enspace \forall \enspace j \enspace
-\in \{0, 1, 2, ..., D - 1\}$. The matrix $t = \{t_k\} \enspace \forall \enspace j \enspace
+the measurements $m_j$ from each of the features of the k-th sample. Then $x = \{x_k\} \enspace \forall \enspace k \enspace
+\in \{0, 1, 2, ..., D - 1\}$. The matrix $t = \{t_k\} \enspace \forall \enspace k \enspace
 \in \{0, 1, 2, ..., D - 1\}$ should contain the vector representation of the true label for each of the samples
-$x_k$ in the same order.
+$x_k$ in the same order. We also need to add a 1 as the last element of the sample vectors such that
+$[ x^T \enspace 1 ^T ] \rightarrow x$. This is done so that the further calculations can include constants.
 
-If the dataset is linearly separable, then there exists a weighing matrix $W$ such that
+If the dataset is linearly separable, then there exists a weighing matrix $W$ of dimensions $C \times (D+1)$ such
+that
 \begin{equation}
     z_k = Wx_k \label{eq:z_k}
 \end{equation}
-reveals a continuous vector representation of how likely it is for a sample $x_k$ to belong to a class
-$c_i$ in the relation $i = argmax(u(z_k))$, where $u$ is the heaviside function. Then one could
+reveals a continuous vector representation of how likely it is for a sample $x_k$ to belong to the class
+$c_i$ in the relation $i = argmax(u(z_k))$, where $u$ is the elementwise heaviside function. Then one could
 easily classify a future sample $x_{N+1}$ just by using \eqref{eq:z_k}.
 
 For the most cases, however, $g_k \neq t_k $ for all samples $x_k$ since the samples are not linearly
@@ -114,7 +127,7 @@ separable. Such a case is depicted in \autoref{fig:squashing_functions}. The hea
 as $u(x)$. Clearly, $u(x)$ will misclassify the $c_1$ sample with value $1$ as a $c_2$ sample. Since
 we in our case have several features of interest, this squashing function would lead us to an output
 where our classifier will classify some samples as belonging to two classes. It would be more
-correct to give measuremennts close to the separation line a score more in the middle of the two classes,
+correct to give measurements close to the separation line a score more in the middle of the two classes,
 such that our classifier will not take such scores equally into consideration as measurements where
 the value clearly belongs to one specific score.
 
@@ -137,12 +150,12 @@ which can classify samples.
     g_k = \frac{1}{1 + e^{-Wx_k}} \label{eq:score_function}
 \end{equation}
 
-For a future sample $x_{N+i}$ would then classify $x_k$ as the class $c_i$ of minimum euclidian
+For a future sample $x_{N+i}$ one would then classify it as the class $c_i$ of minimum euclidian
 distance between $v_i$ and $g_k$.
 
 The next step in developing the linear classifier is to train it on our dataset.
 The linear classifier is not statisctically based, and so one could not use an optimization
-criterion such as ML for calculating $W$. Instead, a quite popular variant is the Minimum Square
+criterion such as ML for calculating $W$. Instead, a quite popular variant is the Mean Square
 Error (MSE) optimization. The $MSE$ of the linear classifier is given in \eqref{eq:MSE}.
 
 \begin{equation}
@@ -156,7 +169,7 @@ squares of the errors, it penalizes large deviations much more than small deviat
 Since there exists no explicit solution to finding the minimum of the MSE with respect to W,
 we have to reside to a gradient based technique. In essence, we will through iterations calculate
 the $\nabla_W MSE$, and update $W$ in the opposite direction of the gradient with a
-small step factor $\alpha$
+small step factor $\alpha$.
 
 \begin{equation}
     W(m) = W(m-1) - \alpha \nabla_W\textnormal{MSE} \label{eq:W_iteration}
@@ -175,13 +188,13 @@ where
     \nabla_{W} z_{k} &=x_{k}^{T}
 \end{align*}
 
-It is common to initialize $W(0) = 0$. The step factor $\alpha$ should then be tuned to fit the dataset.
+It is customary to initialize $W(0) = 0$. The step factor $\alpha$ should then be tuned to fit the dataset.
 A too great value will result in oscillations of $W$ around its minimum whereas a too low value will
 require a lot more iterations than necessary. Lastly, the number of iterations has to be chosen.
 A larger number of iterations is always better, but after a certain number of iterations we will
 not gain a better $W$. So this number should just be "great enough".
 
-\section{The task}\label{sec:task}
+\section{Goals}\label{sec:purpose}
 
 The purpose of this project is to design a linear classifier for the Iris dataset,
 and explore how varying the training set and features affects the performance of
@@ -192,9 +205,16 @@ and compare the performance of the two training sets.
 
 In the last part, we will take a closer look at how linear separability of features
 affects the performance of the classifier. More specifically, we will exclude the
-least linearly separable features from the dataset and evaluate the performance.
+least linearly separable features from the dataset one at a time and evaluate the
+performance.
 
 \section{Implementation and results}\label{sec:implementation_and_results}
+
+The linear classifier has been implemented in Python3.6. Numpy was used for
+representing vectors and matrices as it provides powerful methods for applying
+linear algebra in a fast and easy-to-read manner. For plotting, we chose to stick
+with the well-renowned plotting library Matplotlib. This library has several
+handy features for plotting all relevant kinds of figure used in this project.
 
 The Iris dataset contains three different classes. The vector representation used
 in our implementation is listed in \autoref{tab:class_vectors}, but it should be
@@ -206,9 +226,9 @@ said that the mapping is trivial for the performance of the classifier.
         \hline
         Class name $c_i$ & Vector representation $v_i$ \\
         \hline
-        Iris Setosa & $[1 \enspace 0 \enspace 0]$ \\
-        Iris Versicolor & $[0 \enspace 1 \enspace 0]$ \\
-        Iris Virginica & $[0 \enspace 0 \enspace 1]$ \\
+        Iris Setosa & $[1 \enspace 0 \enspace 0]^T$ \\
+        Iris Versicolor & $[0 \enspace 1 \enspace 0]^T$ \\
+        Iris Virginica & $[0 \enspace 0 \enspace 1]^T$ \\
         \hline
     \end{tabular}
     \caption{trololo}
@@ -245,21 +265,24 @@ data set.
 
 As described in \autoref{sec:theory}, all samples first have to be extended with a 1 as their last element.
 Thereafter, we need to convert the labels from their original string representation to a vector
-representation by the rule of \eqref{eq:class_vector}. The extended training samples together with
-the labels on vector form is fed into the implementation of a linear classifier called
-\lstinline{train_linear_classifier}. This function calculates the weighing matrix $W$ as described in
-\eqref{eq:W_iteration} for a total of \lstinline{num_iterations} number of iterations with an $\alpha$
-described by its parameter \lstinline{alpha}. Also, for each iteration the current weighing matrix
-$W(m)$ is used on the test set to predict the labels of the test samples using
+representation by the rule of \eqref{eq:class_vector}. This is done element-wise on the string labels by
+using the \lstinline{label_string_to_vector} function.
+
+The extended training samples together with the labels on vector form is fed into the implementation of
+a linear classifier called \lstinline{train_linear_classifier}. This function calculates the weighing matrix
+$W$ as described in \eqref{eq:W_iteration} using a total of \lstinline{num_iterations} number of iterations
+with an $\alpha$ described by its parameter \lstinline{alpha}. Also, for each iteration the current weighing
+matrix $W(m)$ is used on the test set to predict the labels of the test samples using
 \lstinline{get_predicted_label_vectors}. These label vectors are then compared against the true
 label vectors and the MSE for this iteration is calculated using \eqref{eq:MSE}, which is implemented
-in \lstinline{get_MSE}.
+in \lstinline{get_MSE}. In addition, we use the \lstinline{get_error_rate} on these label vectors
+to calculate the ratio of misclassified samples per iteration.
 
 It was mentioned in \autoref{sec:theory} that $\alpha$ should be tuned such that the MSE neither
 oscillates (too high $\alpha$) nor does not converge (too low $\alpha$). In order to visualize
 how the choice of different $\alpha$s affect the $MSE$s as a function of the number of iterations,
-such a function has been plotted for $\alpha \enskip \in \enskip \{0.1, 0.05, 0.05, 0.01, 0.0025\}$
-in \autoref{fig:MSE_alphas_large_interval}.
+such a function has been plotted for $\alpha \enskip \in \enskip \{0.0025, 0.005, 0.0075, 0.01\}$
+in \autoref{fig:MSE_alphas_30_first} by using the function called \lstinline{plot_MSEs}.
 
 \begin{figure}
     \centering
@@ -276,7 +299,7 @@ in \autoref{fig:MSE_alphas_large_interval}.
 \end{figure}
 
 Clearly, one can see that an $\alpha \geq 0.0075$ makes the MSE oscillate as a function of the number
-of iterations. This is an indication of that the \eqref{eq:W_iteration} makes the MSE overshoot its
+of iterations. This is an indication of that \eqref{eq:W_iteration} makes the MSE overshoot its
 minimum value instead of monotonically approaching it. And for $\alpha \leq 0.0025$ it converges
 too slowly. Thus $\alpha = 0.005$ seems to be the sweet spot, and so is the value which will be used
 for this partitioning of the dataset.
@@ -284,15 +307,16 @@ for this partitioning of the dataset.
 One further has to decide on the number of iterations necessary for the training to converge. This
 is impossible to estimate from \autoref{fig:MSE_alphas_30_first}. In order to find this out,
 we have to plot the error rate as a function of the number of iterations. This has been done in
-\autoref{fig:error_rate_30_first}. By reading the graph, the error rate seems to stop
-decending after \~300 iterations. It is worth noting that the true error rate actually continues to
-decend, but since we have a discrete number of test samples, the discrete error rate can only decrement
-by a discrete number of samples and so would not be able to decrease any further. This may prove
-different for larger datasets, but either way the increase in performance would only be marginal.
+\autoref{fig:error_rate_30_first} by using the function \lstinline{plot_error_rates}. By reading the graph,
+the error rate seems to stop decending after $\approx 300$ iterations. It is worth noting that the true error rate
+actually continues to decend, but since we have a discrete number of test samples, the discrete error rate
+can only decrement by a discrete number of samples and so would not be able to decrease any further.
+This may prove different for larger datasets, but either way the increase in performance would only be
+marginal.
 
 With these values, we get an error rate of $5\%$ the test set and $3.33\%$ on the training set. This
 also seems to be quite reasonable for a linear classifier: By inspecting \autoref{fig:petal_scatter_plot},
-we observe that \~5 out of 50 samples are not linearly separable by their Petal dimensions.
+we observe that $\approx 5$ out of 50 samples are not linearly separable by their Petal dimensions.
 In order to gain further insights into which samples where misclassified, a confusion matrix comes in
 handy. Such a matrix has the different true labels listed along the columns and the predicted labels
 along the columns. Each cell then gives the number of samples of a certain true label was classified
@@ -359,8 +383,122 @@ classifier.
 
 From \autoref{sec:introduction} we saw how Sepal width and Sepal length was the two features which overlapped
 the most in measurements, meaning they were the least linearly separable. By inspecting \autoref{fig:histograms},
-we see that the most overlap occurs for the Sepal width.
+we see that the most overlap occurs for the Sepal width. Thus it would be interesting to see how a linear classifier would
+perform on the dataset with the Sepal width feature removed.
+
+MSE as a function of number of iterations on $W$ has been plotted in \autoref{fig:MSE_no_sepal_width},
+and we see that we now require a slightly higher $\alpha=0.006$. But what turns out to be different,
+is that the error rate now converges more slowly, as shown in \autoref{fig:error_rate_no_sepal_width}.
+One would initially think that a higher $\alpha$ makes the $MSE$ converge faster. However it turns
+out that the $\nabla MSE$ is actually smaller without this feature, and thus it requires $1000$
+iterations inn order for it to converge. This can in some way be explained by inspecting
+\autoref{fig:histograms}; since the measurements have a small variance in Sepal width,
+this feature will contribute to a larger partial derivative and thus make the MSE converge faster.
+
+
+\begin{figure}
+    \centering
+    \subfloat[MSE]{%
+      \includegraphics[width=0.55\textwidth]{../images/MSE_no_sepal_width.png}%
+      \label{fig:MSE_no_sepal_width}%
+    }
+    \subfloat[Error rate for $\alpha=0.006$]{%
+      \includegraphics[width=0.45\textwidth]{../images/error_rate_no_sepal_width.png}%
+      \label{fig:error_rate_no_sepal_width}%
+    }
+    \caption{Mean Square Error (MSE) and error rate as a function of the number of iterations on W
+    for different values of $\alpha$. Using dataset without Sepal width.}
+\end{figure}
+
+Inspecting the confusion matrices in \autoref{fig:CM_no_sepal_width}, we immidiately see that
+the classifier reveals fewer misclassifications on the dataset as a whole - we now get only
+5 misclassified flowers instead of our previous 6 misclassifications. The error rate for both
+the test dataset and the training dataset was found to be $3.33\%$. This lower error is also
+something that we could have expected - we have now removed a feature which was not linearly
+separable at all, and only contributed to mixing in errors.
+
+\begin{figure}
+    \centering
+    \subfloat[Test dataset]{%
+      \includegraphics[width=0.45\textwidth]{../images/CM_test_no_sepal_width.png}%
+      \label{fig:CM_test_no_sepal_width}%
+    }\qquad
+    \subfloat[Train dataset]{%
+      \includegraphics[width=0.45\textwidth]{../images/CM_train_no_sepal_width.png}%
+      \label{fig:CM_train_no_sepal_width}%
+    }
+    \caption{Confusion matrices gained by using the first 30 samples as train dataset%
+    and excluding the Sepal width feature;%
+    $\alpha = 0.006$; 1000 iterations on $W$.}\label{fig:CM_no_sepal_width}
+\end{figure}
+
+Continuing with removing non-linear features, we also observe that there is a lot of overlap
+in the Sepal length, and so this is the next feature that we want to remove. We are now left
+with only the Petal width and length for our classifier to work with. The same analysis of
+MSE and error rate is done for this variant of the dataset, and has been provided in
+\autoref{fig:tuning_no_sepal_width_length}
+
+
+\begin{figure}
+    \centering
+    \subfloat[MSE]{%
+      \includegraphics[width=0.55\textwidth]{../images/MSE_no_sepal_width_length.png}%
+      \label{fig:MSE_no_sepal_width_length}%
+    }
+    \subfloat[Error rate for $\alpha=0.015$]{%
+      \includegraphics[width=0.45\textwidth]{../images/error_rate_no_sepal_width_length.png}%
+      \label{fig:error_rate_no_sepal_width_length}%
+    }
+    \caption{Mean Square Error (MSE) and error rate as a function of the number of iterations on W
+    for different values of $\alpha$. Using dataset without Sepal width and length.}%
+    \label{fig:tuning_no_sepal_width_length}
+\end{figure}
+
+As we see, the trend we saw for the dataset without Sepal width where error rate took longer
+too converge just seems to continue. We do now require a whopping 6500 iterations on our weight
+matrix for it to converge. We would then expect the error rate to go down by some amount - both
+since we removed overlapping features and since we used more computing power to get to it.
+
+\begin{figure}
+    \centering
+    \subfloat[Test dataset]{%
+      \includegraphics[width=0.45\textwidth]{../images/CM_test_no_sepal_width_length.png}%
+      \label{fig:CM_test_no_sepal_width_length}%
+    }\qquad
+    \subfloat[Train dataset]{%
+      \includegraphics[width=0.45\textwidth]{../images/CM_train_no_sepal_width_length.png}%
+      \label{fig:CM_train_no_sepal_width_length}%
+    }
+    \caption{Confusion matrices gained by using the first 30 samples as train dataset%
+    and excluding the Sepal width feature;%
+    $\alpha = 0.015$; 6500 iterations on $W$.}\label{fig:CM_no_sepal_width_length}
+\end{figure}
+
+However - as \autoref{fig:CM_no_sepal_width_length} reveals - this is surprisingly not the case!
+We get an error rate of $3.33\%$ for the test set and $4.44\%$ for the training set.
+The fact that we do not see a trend in decaying error rates makes us discard our initial assumption
+that the error rate gets lower as we remove the unlinear features. Instead, we only end up having
+to do more computations. And the difference in iterations is significant; While we had to do
+300-400 iterations with the full feature set, we do now have to iterate 6500 times just to get
+comparable results.
+
+Just for taking it to the extremes, we continue by removing the Petal length as well, and we are
+now left with only the petal width in our feature set. This leaves us with an optimal $\alpha = 0.15$
+and this time we need $3000$ iterations for convergence. Neither this time we get any improvements on
+error rates, with the confusion matrix being identical with \autoref{fig:CM_no_sepal_width_length}.
 
 \section{Conclusion}
+
+In this project, we first analyzed the impact of choosing samples for training and testing.
+Here, we saw that the choice actually affected the error rate on the test set. If we were to
+analyze the performance of the estimator solely on the error rate revealed by the test set, we
+would have come to the wrong conclusion of saying that by using the last 30 samples for training
+we actually got a  better estimator. But as we saw, both choices gave the same amount of errors
+on the dataset as a whole. This leads us to draw the conclusion that it is important to choose
+both a train set and a test set which are  representable for the whole population.
+
+In the last section we studied how
+
+\printbibliography
 
 \end{document}
