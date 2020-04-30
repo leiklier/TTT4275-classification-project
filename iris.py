@@ -120,7 +120,6 @@ def train_linear_classifier(train_samples, train_label_vectors, test_samples, te
 
     # Initialize weight matrix
     W = np.zeros((num_classes, num_features+1))
-    print("Shape of W:", W.shape)
 
     for curr_iteration in range(num_iterations):
         # Training
@@ -386,6 +385,7 @@ def main():
         "Use first 20 samples for testing and last 30 for training",
         "Use first 30 samples for training; without sepal width",
         "Use first 30 samples for training; without sepal width and length",
+        "Use first 30 samples for training; with only petal width",
         "** QUIT **"
     ], title="Show histograms or plot MSE, error rate, and confusion matrices for:")
     selected_action = terminal_menu.show()
@@ -420,7 +420,7 @@ def main():
         train_samples, train_labels = train_dataset
         test_samples, test_labels = test_dataset
 
-        # Remove sepal width:
+        # Remove Sepal width:
         train_samples = remove_feature(train_samples, feature_index=1)
         test_samples = remove_feature(test_samples, feature_index=1)
 
@@ -442,10 +442,10 @@ def main():
         train_samples, train_labels = train_dataset
         test_samples, test_labels = test_dataset
 
-        # Remove sepal length:
+        # Remove Sepal length:
         train_samples = remove_feature(train_samples, feature_index=0)
         test_samples = remove_feature(test_samples, feature_index=0)
-        # Remove sepal width:
+        # Remove Sepal width:
         train_samples = remove_feature(train_samples, feature_index=0)
         test_samples = remove_feature(test_samples, feature_index=0)
 
@@ -457,7 +457,33 @@ def main():
 
         show_MSE_plots(train_dataset, test_dataset, features, alphas=[0.013, 0.015, 0.017])
         show_error_rate_plots(train_dataset, test_dataset, features, alpha=0.015, num_iterations=10000)
-        show_confusion_matrices(train_dataset, test_dataset, features, alpha=0.015, num_iterations=10000)
+        show_confusion_matrices(train_dataset, test_dataset, features, alpha=0.015, num_iterations=6500)
+
+    elif selected_action == 5:
+        all_samples, all_labels = load_dataset()
+        train_dataset, test_dataset = split_dataset(all_samples, all_labels, split_index=30)
+
+        train_samples, train_labels = train_dataset
+        test_samples, test_labels = test_dataset
+
+        # Remove Sepal length:
+        train_samples = remove_feature(train_samples, feature_index=0)
+        test_samples = remove_feature(test_samples, feature_index=0)
+        # Remove Sepal width:
+        train_samples = remove_feature(train_samples, feature_index=0)
+        test_samples = remove_feature(test_samples, feature_index=0)
+        # Remove Petal length
+        train_samples = remove_feature(train_samples, feature_index=0)
+        test_samples = remove_feature(test_samples, feature_index=0)
+
+        train_dataset = train_samples, train_labels
+        test_dataset = test_samples, test_labels
+
+        features = {0: 'Petal width'}
+
+        show_MSE_plots(train_dataset, test_dataset, features, alphas=[0.145, 0.15, 0.155])
+        show_error_rate_plots(train_dataset, test_dataset, features, alpha=0.15, num_iterations=3000)
+        show_confusion_matrices(train_dataset, test_dataset, features, alpha=0.15, num_iterations=3000)
 
     else:
         exit(0)
