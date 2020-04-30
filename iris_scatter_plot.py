@@ -12,7 +12,7 @@ def load_dataset():
             sample = np.array(cells[:len(cells) - 1], dtype=np.float32)
 
             # Keep only petal length and width
-            sample = sample[2: ]
+            sample = sample[:2 ]
 
             sample_label_pairs.append( (sample, label) )
 
@@ -35,8 +35,8 @@ for curr_class in classes:
     petal_widths = [ samples[i][1] for i in indices ]
     plt.scatter(petal_lengths, petal_widths, label=curr_class)
 
-plt.xlabel("Petal length [cm]")
-plt.ylabel("Petal width [cm]")
+plt.xlabel("Sepal length [cm]")
+plt.ylabel("Sepal width [cm]")
 
 plt.legend()
 plt.show()
