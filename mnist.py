@@ -202,6 +202,7 @@ def plot_confusion_matrix(confusion_matrix, name):
  ##########################################################
 
 def run_nearest_neighbour_classifier(train_data, train_labels, test_data, test_labels):
+    start = time.time()
     num_errors = 0
     test_predicted = []
 
@@ -214,6 +215,9 @@ def run_nearest_neighbour_classifier(train_data, train_labels, test_data, test_l
         if predicted_number != test_labels[i]:
             num_errors += 1
 
+    end = time.time()
+    print("Time used NN ", end - start)
+
     error_rate = num_errors/len(test_data)*100
     print("Error rate for NN using whole dataset:", error_rate, "%")
 
@@ -224,6 +228,7 @@ def run_nearest_neighbour_classifier(train_data, train_labels, test_data, test_l
     plot_misclassified_images(test_data, test_labels, test_predicted)
 
 def run_k_nearest_neighbour_classifier(train_data, train_labels, test_data, test_labels):
+    start = time.time()
     num_errors = 0
     test_predicted = []
     NUM_NEIGHBOURS = 4
@@ -236,6 +241,9 @@ def run_k_nearest_neighbour_classifier(train_data, train_labels, test_data, test
         if predicted_number != test_labels[i]:
             num_errors += 1
 
+    end = time.time()
+    print("Time used KNN ", end - start)
+
     error_rate = num_errors/len(test_data)*100
     print("Error rate for KNN with k =",NUM_NEIGHBOURS, "using whole dataset:", error_rate,"%")
 
@@ -244,8 +252,13 @@ def run_k_nearest_neighbour_classifier(train_data, train_labels, test_data, test
 
 def run_cluster_classifier(train_data, train_labels, test_data, test_labels):
     errors = 0
+    start_clustering = time.time() 
     train_cluster, train_labels = get_cluster_dataset(train_data, train_labels)
+    end_clustering = time.time()
+    print("Clustering time ", end_clustering -start_clustering)
     test_predicted = []
+
+    start = time.time()
 
     for i in range(len(test_data)):
         k_nearest = k_nearest_neighbours(train_cluster, train_labels, test_data[i], 1)
@@ -255,6 +268,8 @@ def run_cluster_classifier(train_data, train_labels, test_data, test_labels):
         if predicted_number != test_labels[i]:
             errors +=1
 
+    end = time.time()
+    print("NN time", end - start)
     error_rate = errors/len(test_data)*100
     print("Error rate for NN using cluster:", error_rate, "%")
 
